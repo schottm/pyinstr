@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=80", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyinstr"
+description = "A simple robust instrumentation framework with easy virtualization."
+readme = "README.rst"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+authors = [
+    {name = "Marco Schott", email = "marcoschott@outlook.com"},
+]
+dependencies = [
+    "pyvisa"
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+dev = [
+    "ruff"
+]
+
+[project.scripts]
+
+[tool.ruff]
+line-length = 88
+indent-width = 4
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",    # Style Error (pycodestyle)
+    "W",    # Style Warning (pycodestyle)
+    "F",    # Logical errors (pyflakes)
+    "B",    # Bugbears
+    "A",    # Builtins safety
+    # "D",    # Docstring coverage
+    "ANN",  # Type annotations
+    "UP",   # Python upgrade best practices
+    "RUF",  # Ruff’s own rules
+    "ISC",  # Implicit string concat
+    "N",    # Naming conventions
+    "I",    # Import sorting
+]
+
+[tool.ruff.format]
+quote-style = "single"
+docstring-code-format = true
+
+[tool.setuptools_scm.scm.git]
+describe_command = "git describe --dirty --tags --long --exclude *js*"

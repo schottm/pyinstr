@@ -18,9 +18,7 @@ class ExampleInstrument(Instrument):
 inst = ExampleInstrument(NullAdapter())
 print(inst.test.identity)
 
-virt = make_virtual(
-    ExampleInstrument, defaults={'test_multiple': {'identity': 'hello'}}
-)
+virt = make_virtual(ExampleInstrument, defaults={'test_multiple': {'identity': 'hello'}})
 print(virt.test_multiple['channel1'].identity)
 print(inst.test.identity)
 

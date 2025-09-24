@@ -8,7 +8,7 @@ This file is part of PyINSTR.
 import logging
 from typing import Any, override
 
-from pyinstr.adapter import Adapter
+from pyinstr import Adapter
 
 logger = logging.getLogger(__name__)
 

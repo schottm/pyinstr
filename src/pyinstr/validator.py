@@ -24,9 +24,7 @@ def in_range[T: SupportsComparison](value_min: T, value_max: T) -> Callable[[T],
     return wrapper
 
 
-def in_range_inc[T: SupportsComparison](
-    value_min: T, value_max: T
-) -> Callable[[T], bool]:
+def in_range_inc[T: SupportsComparison](value_min: T, value_max: T) -> Callable[[T], bool]:
     def wrapper(value: T) -> bool:
         return value >= value_min and value <= value_max
 

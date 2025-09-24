@@ -13,7 +13,6 @@ except PackageNotFoundError:
     # package is not installed
     pass
 
-from .adapter import Adapter
 from .control import (
     BoolFormat,
     basic_control,
@@ -23,7 +22,7 @@ from .control import (
     instance_control,
     noop,
 )
-from .instrument import Channel, Instrument, MessageProtocol
+from .message import Adapter, Channel, Instrument, MessageProtocol
 from .virtual import make_virtual
 
 __all__ = [

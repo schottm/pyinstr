@@ -37,9 +37,7 @@ class CallableTypeRegistry[I](TypeRegistry[Callable[[type, I], Any]]):
     @overload
     def register[T](self, type_: type[T], value: Callable[[type[T], I], T]) -> None: ...
     @overload
-    def register[T](
-        self, type_: type[T]
-    ) -> Callable[[Callable[[type[T], I], T]], None]: ...
+    def register[T](self, type_: type[T]) -> Callable[[Callable[[type[T], I], T]], None]: ...
 
     @override
     def register[T](
@@ -64,13 +62,9 @@ class DefaultTypeRegistry(TypeRegistry[Callable[[type], Any]]):
         self._defaults: dict[type, Any] = {}
 
     @overload
-    def register[T](
-        self, type_: type[T], value: T | Callable[[type[T]], T]
-    ) -> None: ...
+    def register[T](self, type_: type[T], value: T | Callable[[type[T]], T]) -> None: ...
     @overload
-    def register[T](
-        self, type_: type[T]
-    ) -> Callable[[Callable[[type[T]], T]], None]: ...
+    def register[T](self, type_: type[T]) -> Callable[[Callable[[type[T]], T]], None]: ...
 
     @override
     def register[T](

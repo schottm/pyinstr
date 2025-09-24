@@ -13,7 +13,7 @@ from pyvisa import ResourceManager
 from pyvisa.constants import ControlFlow, Parity, StopBits
 from pyvisa.resources import MessageBasedResource
 
-from pyinstr.adapter import Adapter
+from pyinstr import Adapter
 
 log = logging.getLogger(__name__)
 

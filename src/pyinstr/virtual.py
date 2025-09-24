@@ -11,7 +11,7 @@ from typing import Any
 
 from pyinstr.adapters import NullAdapter
 from pyinstr.control import ControlProperty
-from pyinstr.instrument import (
+from pyinstr.message import (
     Channel,
     ChannelProperty,
     Instrument,
@@ -46,18 +46,14 @@ def _duplicate_class[T](cls: type[T]) -> type[T]:
     return type(cls.__name__, (cls,), _deepcopy_properties(cls))  # type: ignore[reportReturnType]
 
 
-def _make_virtual_class[T: MessageProtocol](
-    cls: type[T], defaults: dict[str, Any] | None
-) -> type[T]:
+def _make_virtual_class[T: MessageProtocol](cls: type[T], defaults: dict[str, Any] | None) -> type[T]:
     # create a deep copy of the class to allow injection into properties
     new_cls = _duplicate_class(cls)
     _replace_properties(new_cls, defaults)
     return new_cls
 
 
-def _inject_control_property[T](
-    prop: ControlProperty[MessageProtocol, T], default: T | None
-) -> None:
+def _inject_control_property[T](prop: ControlProperty[MessageProtocol, T], default: T | None) -> None:
     if default is not None and not isinstance(default, prop._type_):  # type: ignore[reportPrivateUsage]
         raise ValueError(
             f"""Default value {default} for {prop.name} is not of required
@@ -93,9 +89,7 @@ def _inject_channel_property[B: MessageProtocol, T: Channel[MessageProtocol], R]
     prop.factory.type_ = _make_virtual_class(prop.factory.type_, defaults)
 
 
-def _replace_properties[T: MessageProtocol](
-    cls: type[T], defaults: dict[str, Any] | None
-) -> None:
+def _replace_properties[T: MessageProtocol](cls: type[T], defaults: dict[str, Any] | None) -> None:
     for name, val in vars(cls).items():
         if name.startswith('__') or callable(name):
             continue
@@ -113,9 +107,7 @@ def _replace_properties[T: MessageProtocol](
             raise ValueError('Unkown property defined in instrument.')
 
 
-def make_virtual[T: Instrument](
-    cls: type[T], defaults: dict[str, Any] | None = None
-) -> T:
+def make_virtual[T: Instrument](cls: type[T], defaults: dict[str, Any] | None = None) -> T:
     virtual_cls = _make_virtual_class(cls, defaults)
 
     return virtual_cls(NullAdapter(), False)

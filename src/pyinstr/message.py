@@ -11,11 +11,24 @@ from collections import defaultdict
 from threading import Lock
 from typing import Any, ClassVar, Protocol, override, runtime_checkable
 
-from pyinstr.adapter import Adapter
 from pyinstr.property import Property
 
 
-class GenericBase(ABC):
+class Adapter(ABC):
+    @abstractmethod
+    def read(self) -> str:
+        pass
+
+    @abstractmethod
+    def write(self, command: str) -> None:
+        pass
+
+    @abstractmethod
+    def apply(self, options: dict[str, Any]) -> None:
+        pass
+
+
+class MessageBase(ABC):
     @abstractmethod
     def send(self, command: str) -> None: ...
     @abstractmethod
@@ -28,7 +41,7 @@ class MessageProtocol(Protocol):
     def query(self, command: str, delay: float | None = None) -> str: ...
 
 
-class Instrument(GenericBase):
+class Instrument(MessageBase):
     adapter_options: ClassVar[dict[type[Adapter], dict[str, Any]]] = {}
 
     def __init__(self, adapter: Adapter, sync: bool = True) -> None:
@@ -65,9 +78,7 @@ class Instrument(GenericBase):
 
 
 class ChannelDict[B: MessageProtocol, T: Channel[MessageProtocol]](defaultdict[str, T]):
-    def __init__(
-        self, type_: type[T], base: B, *channel_ids: str, dynamic: bool = False
-    ) -> None:
+    def __init__(self, type_: type[T], base: B, *channel_ids: str, dynamic: bool = False) -> None:
         super().__init__()
         self._type_ = type_
         self._base = base
@@ -111,9 +122,7 @@ class ChannelFactory[B: MessageProtocol, T: Channel[MessageProtocol], R]:
         raise NotImplementedError('Not implemented!')
 
 
-class SingleChannelFactory[B: MessageProtocol, T: Channel[MessageProtocol]](
-    ChannelFactory[B, T, T]
-):
+class SingleChannelFactory[B: MessageProtocol, T: Channel[MessageProtocol]](ChannelFactory[B, T, T]):
     def __init__(self, type_: type[T], channel_id: str) -> None:
         super().__init__(type_)
         self._channel_id = channel_id
@@ -122,12 +131,8 @@ class SingleChannelFactory[B: MessageProtocol, T: Channel[MessageProtocol]](
         return self._type_(base, self._channel_id)
 
 
-class MultiChannelFactory[B: MessageProtocol, T: Channel[MessageProtocol]](
-    ChannelFactory[B, T, dict[str, T]]
-):
-    def __init__(
-        self, type_: type[T], *channel_ids: str, dynamic: bool = False
-    ) -> None:
+class MultiChannelFactory[B: MessageProtocol, T: Channel[MessageProtocol]](ChannelFactory[B, T, dict[str, T]]):
+    def __init__(self, type_: type[T], *channel_ids: str, dynamic: bool = False) -> None:
         super().__init__(type_)
         self._channel_ids = channel_ids
         self._dynamic = dynamic
@@ -137,9 +142,7 @@ class MultiChannelFactory[B: MessageProtocol, T: Channel[MessageProtocol]](
         return ChannelDict(self._type_, base, *self._channel_ids, dynamic=self._dynamic)
 
 
-class ChannelProperty[B: MessageProtocol, C: Channel[MessageProtocol], T](
-    Property[B, T]
-):
+class ChannelProperty[B: MessageProtocol, C: Channel[MessageProtocol], T](Property[B, T]):
     def __init__(
         self,
         factory: ChannelFactory[B, C, T],
@@ -148,9 +151,7 @@ class ChannelProperty[B: MessageProtocol, C: Channel[MessageProtocol], T](
     ) -> None:
         self._factory = factory
 
-        super().__init__(
-            fget=self._getter, fset=None, fdel=self._deleter, name=name, doc=doc
-        )
+        super().__init__(fget=self._getter, fset=None, fdel=self._deleter, name=name, doc=doc)
 
     @property
     def factory(self) -> ChannelFactory[B, C, T]:
@@ -167,7 +168,7 @@ class ChannelProperty[B: MessageProtocol, C: Channel[MessageProtocol], T](
         delattr(base, attr_id)
 
 
-class Channel[P: MessageProtocol](GenericBase):
+class Channel[P: MessageProtocol](MessageBase):
     def __init__(self, parent: P, channel_id: str, placeholder: str = 'ch') -> None:
         self._parent = parent
         self._channel_id = channel_id
@@ -179,9 +180,7 @@ class Channel[P: MessageProtocol](GenericBase):
 
     @override
     def query(self, command: str, delay: float | None = None) -> str:
-        return self._parent.query(
-            command.format_map({self._placeholder: self._channel_id}), delay
-        )
+        return self._parent.query(command.format_map({self._placeholder: self._channel_id}), delay)
 
     @classmethod
     def make[T: Channel[MessageProtocol]](

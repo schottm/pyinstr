@@ -9,7 +9,7 @@ from collections.abc import Callable
 from enum import Enum, IntFlag, StrEnum
 from typing import Any
 
-from pyinstr.instrument import MessageProtocol
+from pyinstr.message import MessageProtocol
 from pyinstr.property import Property
 from pyinstr.type_registry import CallableTypeRegistry
 
@@ -18,9 +18,7 @@ convert_registry = CallableTypeRegistry[str]()
 convert_registry.register(str, lambda _, value: value)
 convert_registry.register(int, lambda _, value: int(value))
 convert_registry.register(float, lambda _, value: float(value))
-convert_registry.register(
-    bool, lambda _, value: value.lower() in ['true', '1', 'on', 't', 'y', 'yes']
-)
+convert_registry.register(bool, lambda _, value: value.lower() in ['true', '1', 'on', 't', 'y', 'yes'])
 
 
 @convert_registry.register(StrEnum)

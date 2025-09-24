@@ -6,8 +6,8 @@ This file is part of PyINSTR.
 """
 
 from pyinstr import Instrument
-from pyinstr.mixins import KeithleyMixin, SCPIMixin
+from pyinstr.instruments.mixins import KeysightSupplyMixin, SCPIMixin
 
 
-class Keithley2182(SCPIMixin, KeithleyMixin, Instrument):
+class KeysightRP79XX(SCPIMixin, KeysightSupplyMixin, Instrument):
     pass

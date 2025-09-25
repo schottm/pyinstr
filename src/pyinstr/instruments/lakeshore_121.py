@@ -47,7 +47,7 @@ class Lakeshore121(Instrument):
         BoolFormat.OneZero,
         """Set/get enabled status of instrument.""",
         'IENBL?',
-        'IENBL %d; COMP?',
+        'IENBL %s; COMP?',
         response=noop,
     )
 

@@ -6,11 +6,20 @@ This file is part of PyINSTR.
 """
 
 from datetime import date, datetime, time
+from typing import ClassVar
 
 from pyinstr import basic_control, noop
+from pyinstr.adapters import VISAAdapter
 
 
 class MercuryMixin:
+    adapter_options: ClassVar = {
+        VISAAdapter: {
+            'read_termination': '\n',
+            'write_termination': '\n',
+        }
+    }
+
     catalogue = basic_control(
         str,
         """Get the connected measurement units.""",

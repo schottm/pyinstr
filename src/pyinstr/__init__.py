@@ -17,13 +17,14 @@ from .control import (
     BoolFormat,
     basic_control,
     bool_control,
+    convert_registry,
     enum_control,
     flag_control,
     instance_control,
     noop,
 )
 from .message import Adapter, Channel, Instrument, MessageProtocol
-from .virtual import make_virtual
+from .virtual import default_registry, is_virtual, make_virtual
 
 __all__ = [
     'Adapter',
@@ -33,9 +34,12 @@ __all__ = [
     'MessageProtocol',
     'basic_control',
     'bool_control',
+    'convert_registry',
+    'default_registry',
     'enum_control',
     'flag_control',
     'instance_control',
+    'is_virtual',
     'make_virtual',
     'noop',
 ]

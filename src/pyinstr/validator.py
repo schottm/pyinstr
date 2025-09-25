@@ -5,7 +5,7 @@ This file is part of PyINSTR.
 :license: MIT, see LICENSE for more details.
 """
 
-from collections.abc import Callable, Container
+from collections.abc import Callable
 from typing import Protocol, runtime_checkable
 
 
@@ -31,7 +31,7 @@ def in_range_inc[T: SupportsComparison](value_min: T, value_max: T) -> Callable[
     return wrapper
 
 
-def in_set[T](values: Container[T]) -> Callable[[T], bool]:
+def in_set[T](*values: T) -> Callable[[T], bool]:
     def wrapper(value: T) -> bool:
         return value in values
 

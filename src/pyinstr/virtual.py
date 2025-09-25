@@ -28,6 +28,8 @@ default_registry.register(bool, False)
 default_registry.register(StrEnum, lambda type_: next(iter(type_)))
 default_registry.register(IntFlag, lambda type_: type_(0))
 
+_VIRTUAL = '__virtual_instrument__'
+
 
 def _deepcopy_properties[T](cls: type[T]) -> dict[str, Any]:
     attrs: dict[str, Any] = {}
@@ -49,6 +51,7 @@ def _duplicate_class[T](cls: type[T]) -> type[T]:
 def _make_virtual_class[T: MessageProtocol](cls: type[T], defaults: dict[str, Any] | None) -> type[T]:
     # create a deep copy of the class to allow injection into properties
     new_cls = _duplicate_class(cls)
+    setattr(new_cls, _VIRTUAL, True)
     _replace_properties(new_cls, defaults)
     return new_cls
 
@@ -111,3 +114,8 @@ def make_virtual[T: Instrument](cls: type[T], defaults: dict[str, Any] | None = 
     virtual_cls = _make_virtual_class(cls, defaults)
 
     return virtual_cls(NullAdapter(), False)
+
+
+def is_virtual(obj: object) -> bool:
+    cls = obj if isinstance(obj, type) else type(obj)
+    return hasattr(cls, _VIRTUAL)

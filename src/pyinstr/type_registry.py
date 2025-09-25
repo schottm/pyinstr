@@ -19,11 +19,15 @@ class TypeRegistry[V]:
 
     def get(self, type_: type) -> V:
         # Find closest registered superclass
-        candidates = [typ for typ in self._registry if issubclass(type_, typ)]
-        if not candidates:
-            raise KeyError(f'No registration for type {type_}')
-        closest = min(candidates, key=lambda typ: self._type_distance(type_, typ))
-        return self._registry[closest]
+        for cls in type_.mro():
+            if cls in self._registry:
+                return self._registry[cls]
+        raise KeyError(f'No registration for type {type_}')
+        # candidates = [typ for typ in self._registry if issubclass(type_, typ)]
+        # if not candidates:
+        #    raise KeyError(f'No registration for type {type_}')
+        # closest = min(candidates, key=lambda typ: self._type_distance(type_, typ))
+        # return self._registry[closest]
 
     @staticmethod
     def _type_distance(child: type, parent: type) -> int | float:

@@ -56,14 +56,14 @@ def _make_virtual_class[T: MessageProtocol](cls: type[T], defaults: dict[str, An
     return new_cls
 
 
-def _inject_control_property[T](prop: ControlProperty[MessageProtocol, T], default: T | None) -> None:
+def _inject_control_property[B: MessageProtocol, T](prop: ControlProperty[B, T], default: T | None) -> None:
     if default is not None and not isinstance(default, prop._type_):  # type: ignore[reportPrivateUsage]
         raise ValueError(
             f"""Default value {default} for {prop.name} is not of required
             type {prop._type_}."""  # type: ignore[reportPrivateUsage]
         )
 
-    def _getter(self: MessageProtocol) -> T:
+    def _getter(self: B) -> T:
         attr_id = f'_{prop.name}'
         if not hasattr(self, attr_id):
             setattr(
@@ -73,11 +73,11 @@ def _inject_control_property[T](prop: ControlProperty[MessageProtocol, T], defau
             )
         return getattr(self, attr_id)
 
-    def _setter(self: MessageProtocol, value: T) -> None:
+    def _setter(self: B, value: T) -> None:
         attr_id = f'_{prop.name}'
         setattr(self, attr_id, value)
 
-    def _deleter(self: MessageProtocol) -> None:
+    def _deleter(self: B) -> None:
         attr_id = f'_{prop.name}'
         delattr(self, attr_id)
 

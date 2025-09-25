@@ -8,7 +8,7 @@ This file is part of PyINSTR.
 from enum import StrEnum
 from typing import ClassVar
 
-from pyinstr import BoolFormat, MessageProtocol, basic_control, bool_control, enum_control, instance_control
+from pyinstr import BoolFormat, basic_control, bool_control, enum_control
 from pyinstr.adapters import VISAAdapter
 from pyinstr.validator import in_range_inc
 
@@ -40,6 +40,14 @@ class KeithleyMixin:
         Bus = 'BUS'
         External = 'EXT'
 
+    class FormatElement(StrEnum):
+        Reading = 'READ'
+        Units = 'UNIT'
+        Timestamp = 'TST'
+        ReadingNumber = 'RNUM'
+        Channel = 'CHAN'
+        Limits = 'LIM'
+
     fetch = basic_control(
         float,
         """Fetch the latest post-processed reading.""",
@@ -52,16 +60,11 @@ class KeithleyMixin:
         ':READ?',
     )
 
-    def check_function(self: MessageProtocol, function: ChannelFunction) -> bool:
-        return function in KeithleyMixin.ChannelFunction
-
-    function = instance_control(
+    function = enum_control(
         ChannelFunction,
         """Control the measurement mode of the active channel.""",
         ':SENS:FUNC?',
-        'SENS:FUNC %s',
-        set_format=lambda value: value.value,
-        validate=check_function,
+        ':SENS:FUNC %s',
     )
 
     trigger_source = enum_control(
@@ -69,6 +72,14 @@ class KeithleyMixin:
         """Gets/sets the trigger source.""",
         ':TRIG:SOUR?',
         ':TRIG:SOUR %s',
+    )
+
+    trigger_count = basic_control(
+        int,
+        """Controls the trigger count.""",
+        ':TRIG:COUN?',
+        ':TRIG:COUN %d',
+        validate=in_range_inc(1, 55000),
     )
 
     initiate_continuous_enabled = bool_control(
@@ -80,7 +91,7 @@ class KeithleyMixin:
 
     display_enabled = bool_control(
         BoolFormat.OneZero,
-        """Control whether the front display is enabled. Valid values are True and False.""",
+        """Controls whether the front display is enabled.""",
         ':DISP:ENAB?',
         ':DISP:ENAB %s',
     )
@@ -102,4 +113,11 @@ class KeithleyMixin:
         ':SENS:VOLT:DIG?',
         ':SENS:VOLT:DIG %d',
         validate=in_range_inc(4, 7),
+    )
+
+    format = enum_control(
+        FormatElement,
+        """Set the element returned in the reading.""",
+        ':FORM:ELEM?',
+        ':FORM:ELEM %s',
     )

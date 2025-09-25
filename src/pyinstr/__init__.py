@@ -15,13 +15,15 @@ except PackageNotFoundError:
 
 from .control import (
     BoolFormat,
+    always,
     basic_control,
     bool_control,
     convert_registry,
     enum_control,
     flag_control,
-    instance_control,
+    ignore,
     noop,
+    optional_control,
 )
 from .message import Adapter, Channel, Instrument, MessageProtocol
 from .virtual import default_registry, is_virtual, make_virtual
@@ -32,14 +34,16 @@ __all__ = [
     'Channel',
     'Instrument',
     'MessageProtocol',
+    'always',
     'basic_control',
     'bool_control',
     'convert_registry',
     'default_registry',
     'enum_control',
     'flag_control',
-    'instance_control',
+    'ignore',
     'is_virtual',
     'make_virtual',
     'noop',
+    'optional_control',
 ]

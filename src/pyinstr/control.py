@@ -34,6 +34,18 @@ def _string_to_flag(type_: type[IntFlag], value: str) -> IntFlag:
     return type_(int(value))
 
 
+def noop(_self: MessageProtocol, value: str) -> str:
+    return value
+
+
+def ignore(_value: str) -> None:
+    pass
+
+
+def always[T](_self: MessageProtocol, _value: Any) -> bool:  # noqa: ANN401
+    return True
+
+
 class ControlProperty[S, T](Property[S, T]):
     """Attribute property class with types and assigned name."""
 
@@ -50,7 +62,7 @@ class ControlProperty[S, T](Property[S, T]):
         super().__init__(fget=fget, fset=fset, fdel=fdel, name=name, doc=doc)
 
 
-def instance_control[S: MessageProtocol, T](
+def basic_control[S: MessageProtocol, T](
     type_: type[T],
     doc: str,
     get_cmd: str | None = None,
@@ -58,8 +70,8 @@ def instance_control[S: MessageProtocol, T](
     /,
     get_format: Callable[[str], T] | None = None,
     set_format: Callable[[T], Any] | None = None,
-    pre_format: Callable[[str], str] | None = None,
-    validate: Callable[[S, T], bool] | None = None,
+    pre_format: Callable[[S, str], str] = noop,
+    validate: Callable[[S, T], bool] = always,
     response: Callable[[str], None] | None = None,
 ) -> Property[S, T]:
     if get_cmd is None and set_cmd is None:
@@ -77,7 +89,7 @@ def instance_control[S: MessageProtocol, T](
             raise ValueError('Cannot get value without command!')
         result = self.query(get_cmd)
         if pre_format is not None:
-            result = pre_format(result)
+            result = pre_format(self, result)
         return get_format(result)
 
     def _setter(self: S, value: T) -> None:
@@ -95,7 +107,7 @@ def instance_control[S: MessageProtocol, T](
         else:
             result = self.query(command)
             if pre_format is not None:
-                result = pre_format(result)
+                result = pre_format(self, result)
             response(result)
 
     def _deleter(self: S) -> None:
@@ -110,19 +122,19 @@ def instance_control[S: MessageProtocol, T](
     )
 
 
-def basic_control[T](
+def optional_control[S: MessageProtocol, T](
     type_: type[T],
     doc: str,
     get_cmd: str | None = None,
     set_cmd: str | None = None,
     /,
-    get_format: Callable[[str], T] | None = None,
-    set_format: Callable[[T], Any] | None = None,
-    pre_format: Callable[[str], str] | None = None,
-    validate: Callable[[T], bool] | None = None,
+    get_format: Callable[[str], T | None] | None = None,
+    set_format: Callable[[T | None], Any] | None = None,
+    pre_format: Callable[[S, str], str] = noop,
+    validate: Callable[[S, T | None], bool] = always,
     response: Callable[[str], None] | None = None,
-) -> Property[MessageProtocol, T]:
-    return instance_control(
+) -> Property[S, T | None]:
+    return basic_control(
         type_,
         doc,
         get_cmd,
@@ -130,7 +142,7 @@ def basic_control[T](
         get_format=get_format,
         set_format=set_format,
         pre_format=pre_format,
-        validate=None if validate is None else (lambda _, t: validate(t)),
+        validate=validate,
         response=response,
     )
 
@@ -157,15 +169,15 @@ class BoolFormat(Enum):
             return self.value[1]
 
 
-def bool_control(
+def bool_control[S: MessageProtocol](
     formatter: BoolFormat,
     doc: str,
     get_cmd: str | None = None,
     set_cmd: str | None = None,
     /,
-    pre_format: Callable[[str], str] | None = None,
+    pre_format: Callable[[S, str], str] = noop,
     response: Callable[[str], None] | None = None,
-) -> Property[MessageProtocol, bool]:
+) -> Property[S, bool]:
     return basic_control(
         bool,
         doc,
@@ -174,20 +186,20 @@ def bool_control(
         get_format=None,  # accepts all formats
         set_format=formatter.to_string,
         pre_format=pre_format,
-        validate=lambda value: value in [True, False],
+        validate=lambda _, value: value in [True, False],
         response=response,
     )
 
 
-def enum_control[E: StrEnum](
+def enum_control[S: MessageProtocol, E: StrEnum](
     enum: type[E],
     doc: str,
     get_cmd: str | None = None,
     set_cmd: str | None = None,
     /,
-    pre_format: Callable[[str], str] | None = None,
+    pre_format: Callable[[S, str], str] = noop,
     response: Callable[[str], None] | None = None,
-) -> Property[MessageProtocol, E]:
+) -> Property[S, E]:
     return basic_control(
         enum,
         doc,
@@ -196,20 +208,20 @@ def enum_control[E: StrEnum](
         get_format=_string_to_enum,
         set_format=lambda value: value.value,
         pre_format=pre_format,
-        validate=lambda value: value in enum,
+        validate=lambda _, value: value in enum,
         response=response,
     )
 
 
-def flag_control[F: IntFlag](
+def flag_control[S: MessageProtocol, F: IntFlag](
     flag: type[F],
     doc: str,
     get_cmd: str | None = None,
     set_cmd: str | None = None,
     /,
-    pre_format: Callable[[str], str] | None = None,
+    pre_format: Callable[[S, str], str] = noop,
     response: Callable[[str], None] | None = None,
-) -> Property[MessageProtocol, F]:
+) -> Property[S, F]:
     return basic_control(
         flag,
         doc,
@@ -218,14 +230,10 @@ def flag_control[F: IntFlag](
         get_format=_string_to_flag,
         set_format=lambda value: flag(value).value,
         pre_format=pre_format,
-        validate=lambda value: isinstance(flag(value), flag),
+        validate=lambda _, value: isinstance(flag(value), flag),
         response=response,
     )
 
 
 def list_control[T](type_: type[T], doc: str) -> Property[MessageProtocol, list[T]]:
     raise NotImplementedError('Not implemented!')
-
-
-def noop(_: str) -> None:
-    pass

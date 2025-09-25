@@ -4,7 +4,7 @@ from pyinstr.instruments import Keithley2182
 
 
 class ExampleChannel(Channel[MessageProtocol]):
-    identity = basic_control(str, 'Example get/set id', '*IDN?', '*IDN %s')
+    value = basic_control(str, 'Example get/set id', '*IDN?', '*IDN %s')
 
 
 class ExampleInstrument(Instrument):
@@ -16,11 +16,11 @@ class ExampleInstrument(Instrument):
 
 
 inst = ExampleInstrument(NullAdapter())
-print(inst.test.identity)
+print(inst.test.value)
 
-virt = make_virtual(ExampleInstrument, defaults={'test_multiple': {'identity': 'hello'}})
-print(virt.test_multiple['channel1'].identity)
-print(inst.test.identity)
+virt = make_virtual(ExampleInstrument, defaults={'test_multiple': {'value': 'hello'}})
+print(virt.test_multiple['channel1'].value)
+print(inst.test.value)
 
 keithley_virt = make_virtual(Keithley2182)
 keithley_virt.clear_status()

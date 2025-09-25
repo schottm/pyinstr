@@ -9,5 +9,5 @@ from pyinstr import Instrument
 from pyinstr.instruments.mixins import KeysightSupplyMixin, SCPIMixin
 
 
-class KeysightRP79XX(SCPIMixin, KeysightSupplyMixin, Instrument):
+class KeysightRP79XX(KeysightSupplyMixin, SCPIMixin, Instrument):
     pass

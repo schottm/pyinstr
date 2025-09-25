@@ -17,31 +17,31 @@ class KeysightSupplyMixin:
         Voltage = 'VOLT'
 
     class OperationStatus(IntFlag):
-        ConstantVoltage = 1
-        ConstantCurrent = 2
-        OutputOff = 4
-        MeasurementWait = 8
-        TransientWait = 16
-        MeasurementActive = 32
-        TransientActive = 64
-        User1 = 128
-        User2 = 256
+        ConstantVoltage = 0x1
+        ConstantCurrent = 0x2
+        OutputOff = 0x4
+        MeasurementWait = 0x8
+        TransientWait = 0x10
+        MeasurementActive = 0x20
+        TransientActive = 0x40
+        User1 = 0x80
+        User2 = 0x100
 
     class QuestionableStatus(IntFlag):
-        VoltageProtection = 1
-        CurrentProtection = 2
-        PowerFail = 4
-        PositivePowerLimit = 8
-        TemperatureProtection = 16
-        NegativePowerLimit = 32
-        NegativeOverVoltage = 64
-        PositiveLimit = 128
-        NegativeLimit = 256
-        Inhibit = 512
-        Unregulated = 1024
-        TimerProtection = 2048
-        DynamicProtection = 4096
-        SenseFault = 8192
+        VoltageProtection = 0x1
+        CurrentProtection = 0x2
+        PowerFail = 0x4
+        PositivePowerLimit = 0x8
+        TemperatureProtection = 0x10
+        NegativePowerLimit = 0x20
+        NegativeOverVoltage = 0x40
+        PositiveLimit = 0x80
+        NegativeLimit = 0x100
+        Inhibit = 0x200
+        Unregulated = 0x400
+        TimerProtection = 0x800
+        DynamicProtection = 0x1000
+        SenseFault = 0x2000
 
     current = KeysightControlChannel.make('CURR')
     voltage = KeysightControlChannel.make('VOLT')

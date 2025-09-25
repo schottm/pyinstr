@@ -5,10 +5,22 @@ This file is part of PyINSTR.
 :license: MIT, see LICENSE for more details.
 """
 
+from collections.abc import Callable
 from enum import StrEnum
 
-from pyinstr import BoolFormat, Channel, MessageProtocol, basic_control, bool_control, enum_control, noop
+from pyinstr import BoolFormat, Channel, MessageProtocol, basic_control, bool_control, enum_control, ignore
 from pyinstr.validator import in_range, in_range_inc
+
+
+def _pre_format_quantity(quantity: str) -> Callable[[MessageProtocol, str], str]:
+    def wrapper(_: MessageProtocol, value: str) -> str:
+        return value.split(':')[-1].replace(quantity, '')
+
+    return wrapper
+
+
+def _pre_format(_: MessageProtocol, value: str) -> str:
+    return value.split(':')[-1]
 
 
 class TemperatureSensor(Channel[MessageProtocol]):
@@ -17,7 +29,7 @@ class TemperatureSensor(Channel[MessageProtocol]):
         """Get the measured temperature, in Kelvin.""",
         'READ:DEV:{ch}:TEMP:SIG:TEMP',
         None,
-        pre_format=lambda v: v.split(':')[-1].replace('K', ''),
+        pre_format=_pre_format_quantity('K'),
     )
 
     voltage = basic_control(
@@ -25,7 +37,7 @@ class TemperatureSensor(Channel[MessageProtocol]):
         """Get the sensor voltage, in Volts.""",
         'READ:DEV:{ch}:TEMP:SIG:VOLT',
         None,
-        pre_format=lambda v: v.split(':')[-1].replace('V', ''),
+        pre_format=_pre_format_quantity('V'),
     )
 
 
@@ -36,8 +48,8 @@ class TemperatureLoopControl(TemperatureSensor):
         the PID loop (``True``) or the manual heater percentage (``False``).""",
         'READ:DEV:{ch}:TEMP:LOOP:ENAB',
         'SET:DEV:{ch}:TEMP:LOOP:ENAB:%s',
-        pre_format=lambda v: v.split(':')[-1],
-        response=noop,
+        pre_format=_pre_format,
+        response=ignore,
     )
 
     proportional = basic_control(
@@ -45,8 +57,8 @@ class TemperatureLoopControl(TemperatureSensor):
         """Control the proportional term, P, of the control loop.""",
         'READ:DEV:{ch}:TEMP:LOOP:P',
         'SET:DEV:{ch}:TEMP:LOOP:P:%g',
-        pre_format=lambda v: v.split(':')[-1],
-        response=noop,
+        pre_format=_pre_format,
+        response=ignore,
     )
 
     integral = basic_control(
@@ -54,8 +66,8 @@ class TemperatureLoopControl(TemperatureSensor):
         """Control the integral term, I, of the control loop.""",
         'READ:DEV:{ch}:TEMP:LOOP:I',
         'SET:DEV:{ch}:TEMP:LOOP:I:%g',
-        pre_format=lambda v: v.split(':')[-1],
-        response=noop,
+        pre_format=_pre_format,
+        response=ignore,
     )
 
     derivative = basic_control(
@@ -63,8 +75,8 @@ class TemperatureLoopControl(TemperatureSensor):
         """Control the derivative term, D, of the control loop.""",
         'READ:DEV:{ch}:TEMP:LOOP:D',
         'SET:DEV:{ch}:TEMP:LOOP:D:%g',
-        pre_format=lambda v: v.split(':')[-1],
-        response=noop,
+        pre_format=_pre_format,
+        response=ignore,
     )
 
     temperature_setpoint = basic_control(
@@ -73,9 +85,9 @@ class TemperatureLoopControl(TemperatureSensor):
         0 to 2000).""",
         'READ:DEV:{ch}:TEMP:LOOP:TSET',
         'SET:DEV:{ch}:TEMP:LOOP:TSET:%g',
-        pre_format=lambda v: v.split(':')[-1].replace('K', ''),
+        pre_format=_pre_format_quantity('K'),
         validate=in_range(0.0, 2000.0),
-        response=noop,
+        response=ignore,
     )
 
     heater = basic_control(
@@ -86,9 +98,9 @@ class TemperatureLoopControl(TemperatureSensor):
         'SET:DEV:{ch}:TEMP:LOOP:HSET:%g',
         get_format=lambda x: float(x) * 1e-2,
         set_format=lambda x: x * 1e2,
-        pre_format=lambda v: v.split(':')[-1],
+        pre_format=_pre_format,
         validate=in_range_inc(0.0, 1.0),
-        response=noop,
+        response=ignore,
     )
 
     ramp_rate = basic_control(
@@ -97,9 +109,9 @@ class TemperatureLoopControl(TemperatureSensor):
         range 0 to 100000).""",
         'READ:DEV:{ch}:TEMP:LOOP:RSET',
         'SET:DEV:{ch}:TEMP:LOOP:RSET:%g',
-        pre_format=lambda v: v.split(':')[-1].replace('K/m', ''),
+        pre_format=_pre_format_quantity('K/m'),
         validate=in_range(0.0, 100000.0),
-        response=noop,
+        response=ignore,
     )
 
     ramp_enabled = bool_control(
@@ -108,8 +120,8 @@ class TemperatureLoopControl(TemperatureSensor):
         disabled (``False``).""",
         'READ:DEV:{ch}:TEMP:LOOP:RENA',
         'SET:DEV:{ch}:TEMP:LOOP:RENA:%s',
-        pre_format=lambda v: v.split(':')[-1],
-        response=noop,
+        pre_format=_pre_format,
+        response=ignore,
     )
 
 
@@ -119,7 +131,7 @@ class HeaterControl(Channel[MessageProtocol]):
         """Get the heater excitation voltage, in Volts.""",
         'READ:DEV:{ch}:HTR:SIG:VOLT',
         None,
-        pre_format=lambda v: v.split(':')[-1].replace('V', ''),
+        pre_format=_pre_format_quantity('V'),
     )
 
     current = basic_control(
@@ -127,7 +139,7 @@ class HeaterControl(Channel[MessageProtocol]):
         """Get the heater excitation current, in Amps.""",
         'READ:DEV:{ch}:HTR:SIG:CURR',
         None,
-        pre_format=lambda v: v.split(':')[-1].replace('A', ''),
+        pre_format=_pre_format_quantity('A'),
     )
 
     power = basic_control(
@@ -135,7 +147,7 @@ class HeaterControl(Channel[MessageProtocol]):
         """Get the heater power dissipation, in Watts.""",
         'READ:DEV:{ch}:HTR:SIG:POWR',
         None,
-        pre_format=lambda v: v.split(':')[-1].replace('W', ''),
+        pre_format=_pre_format_quantity('W'),
     )
 
     voltage_limit = basic_control(
@@ -144,9 +156,9 @@ class HeaterControl(Channel[MessageProtocol]):
         from 0 to 40).""",
         'READ:DEV:{ch}:HTR:VLIM',
         'SET:DEV:{ch}:HTR:VLIM:%g',
-        pre_format=lambda v: v.split(':')[-1],
+        pre_format=_pre_format,
         validate=in_range_inc(0.0, 40.0),
-        response=noop,
+        response=ignore,
     )
 
     resistance = basic_control(
@@ -155,9 +167,9 @@ class HeaterControl(Channel[MessageProtocol]):
         in the range of 10 to 2000).""",
         'READ:DEV:{ch}:HTR:RES',
         'SET:DEV:{ch}:HTR:RES:%g',
-        pre_format=lambda v: v.split(':')[-1],
+        pre_format=_pre_format,
         validate=in_range_inc(10.0, 2000.0),
-        response=noop,
+        response=ignore,
     )
 
     max_power = basic_control(
@@ -165,7 +177,7 @@ class HeaterControl(Channel[MessageProtocol]):
         """Get the provisional maximum power of the heater, in Watts.""",
         'READ:DEV:{ch}:HTR:PMAX',
         None,
-        pre_format=lambda v: v.split(':')[-1],
+        pre_format=_pre_format,
     )
 
 
@@ -176,7 +188,7 @@ class LevelSensor(Channel[MessageProtocol]):
         'READ:DEV:{ch}:LVL:SIG:HEL:LEV',
         None,
         get_format=lambda v: float(v) * 1e-2,
-        pre_format=lambda v: v.split(':')[-1].replace('%', ''),
+        pre_format=_pre_format_quantity('%'),
     )
 
     n2_level = basic_control(
@@ -185,7 +197,7 @@ class LevelSensor(Channel[MessageProtocol]):
         'READ:DEV:{ch}:LVL:SIG:NIT:LEV',
         None,
         get_format=lambda v: float(v) * 1e-2,
-        pre_format=lambda v: v.split(':')[-1].replace('%', ''),
+        pre_format=_pre_format_quantity('%'),
     )
 
 
@@ -202,7 +214,7 @@ class MagnetControl(Channel[MessageProtocol]):
         """Get the most recent field reading, in Tesla.""",
         'READ:DEV:{ch}:PSU:SIG:FLD',
         None,
-        pre_format=lambda v: v.split(':')[-1].replace('T', ''),
+        pre_format=_pre_format_quantity('T'),
     )
 
     persist_field = basic_control(
@@ -210,7 +222,7 @@ class MagnetControl(Channel[MessageProtocol]):
         """Get the most recent persist field reading, in Tesla.""",
         'READ:DEV:{ch}:PSU:SIG:PFLD',
         None,
-        pre_format=lambda v: v.split(':')[-1].replace('T', ''),
+        pre_format=_pre_format_quantity('T'),
     )
 
     # TODO : add range validation
@@ -219,8 +231,8 @@ class MagnetControl(Channel[MessageProtocol]):
         """Control the target magnetic field, in Tesla (float strictly in range -CLIM/ATOB and CLIM/ATOB)""",
         'READ:DEV:{ch}:PSU:SIG:FSET',
         'SET:DEV:{ch}:PSU:SIG:FSET:%g',
-        pre_format=lambda v: v.split(':')[-1].replace('T', ''),
-        response=noop,
+        pre_format=_pre_format_quantity('T'),
+        response=ignore,
     )
 
     field_rate_setpoint = basic_control(
@@ -228,9 +240,9 @@ class MagnetControl(Channel[MessageProtocol]):
         """Control the target magnetic field rate, in Tesla/min (float strictly in range 0.0 to 50)""",
         'READ:DEV:{ch}:PSU:SIG:RFST',
         'SET:DEV:{ch}:PSU:SIG:RFST:%g',
-        pre_format=lambda v: v.split(':')[-1].replace('T/m', ''),
+        pre_format=_pre_format_quantity('T/m'),
         validate=in_range_inc(0.0, 50.0),
-        response=noop,
+        response=ignore,
     )
 
     heater_enabled = bool_control(
@@ -238,8 +250,8 @@ class MagnetControl(Channel[MessageProtocol]):
         """Get/set the heater status.""",
         'READ:DEV:{ch}:PSU:SIG:SWHT',
         'SET:DEV:{ch}:PSU:SIG:SWHT:%s',
-        pre_format=lambda v: v.split(':')[-1],
-        response=noop,
+        pre_format=_pre_format,
+        response=ignore,
     )
 
     action = enum_control(
@@ -247,8 +259,8 @@ class MagnetControl(Channel[MessageProtocol]):
         """Get/set the PSU action status.""",
         'READ:DEV:{ch}:PSU:SIG:ACTN',
         'SET:DEV:{ch}:PSU:SIG:ACTN:%s',
-        pre_format=lambda v: v.split(':')[-1],
-        response=noop,
+        pre_format=_pre_format,
+        response=ignore,
     )
 
 
@@ -260,7 +272,7 @@ class FlowControl(Channel[MessageProtocol]):
         'SET:DEV:{ch}:AUX:LOOP:FSET:%g',
         get_format=lambda v: float(v) * 1e-2,
         set_format=lambda v: v * 1e2,
-        pre_format=lambda v: v.split(':')[-1].replace('%', ''),
+        pre_format=_pre_format_quantity('%'),
         validate=in_range_inc(0.0, 1.0),
-        response=noop,
+        response=ignore,
     )

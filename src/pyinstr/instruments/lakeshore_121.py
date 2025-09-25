@@ -9,7 +9,7 @@ from typing import ClassVar
 
 from pyvisa.constants import ControlFlow, Parity, StopBits
 
-from pyinstr import BoolFormat, Instrument, basic_control, bool_control, noop
+from pyinstr import BoolFormat, Instrument, basic_control, bool_control, ignore
 from pyinstr.adapters import VISAAdapter
 from pyinstr.validator import in_range, in_range_inc
 
@@ -40,7 +40,7 @@ class Lakeshore121(Instrument):
         'BRIGT?',
         'BRIGT %02d; COMP?',
         validate=in_range(0, 16),
-        response=noop,
+        response=ignore,
     )
 
     enabled = bool_control(
@@ -48,7 +48,7 @@ class Lakeshore121(Instrument):
         """Set/get enabled status of instrument.""",
         'IENBL?',
         'IENBL %s; COMP?',
-        response=noop,
+        response=ignore,
     )
 
     current = basic_control(
@@ -57,7 +57,7 @@ class Lakeshore121(Instrument):
         'SETI?',
         'RANGE 13; SETI %f; COMP?',
         validate=in_range_inc(100e-9, 100e-3),
-        response=noop,
+        response=ignore,
     )
 
     def factory_defaults(self) -> None:

@@ -174,6 +174,14 @@ class Channel[P: MessageProtocol](MessageBase):
         self._channel_id = channel_id
         self._placeholder = placeholder
 
+    @property
+    def parent(self) -> P:
+        return self._parent
+
+    @property
+    def name(self) -> str:
+        return self._channel_id
+
     @override
     def send(self, command: str) -> None:
         self._parent.send(command.format_map({self._placeholder: self._channel_id}))

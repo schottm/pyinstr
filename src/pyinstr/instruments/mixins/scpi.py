@@ -37,7 +37,7 @@ class SCPIMixin:
         bool,
         """Returns true when all pending overlapped operations have been completed.""",
         '*OPC?',
-        #'%s',
+        '%s',
         get_format=lambda value: value == '1',
         set_format=lambda value: '*OPC' if value else '',
     )

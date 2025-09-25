@@ -8,7 +8,7 @@ This file is part of PyINSTR.
 from datetime import date, datetime, time
 from typing import ClassVar
 
-from pyinstr import basic_control, noop
+from pyinstr import basic_control, ignore
 from pyinstr.adapters import VISAAdapter
 
 
@@ -33,7 +33,7 @@ class MercuryMixin:
         'SET:SYS:DATE:%s',
         get_format=lambda v: datetime.strptime(v, '%Y:%m:%d').date(),
         set_format=lambda v: date.strftime(v, '%Y:%m:%d'),
-        response=noop,
+        response=ignore,
     )
 
     time = basic_control(
@@ -43,5 +43,5 @@ class MercuryMixin:
         'SET:SYS:TIME:%s',
         get_format=lambda v: datetime.strptime(v, '%H:%M:%S').time(),
         set_format=lambda v: time.strftime(v, '%H:%M:%S'),
-        response=noop,
+        response=ignore,
     )

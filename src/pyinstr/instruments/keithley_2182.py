@@ -5,21 +5,13 @@ This file is part of PyINSTR.
 :license: MIT, see LICENSE for more details.
 """
 
-from typing import override
-
-from pyinstr import BoolFormat, Channel, Instrument, MessageProtocol, basic_control, bool_control, instance_control
+from pyinstr import BoolFormat, Channel, Instrument, MessageProtocol, basic_control, bool_control
 from pyinstr.instruments.mixins import KeithleyMixin, SCPIMixin
-from pyinstr.validator import in_range_inc, in_set
+from pyinstr.validator import for_channel, in_range_inc, in_set
 
 
 class Keithley2182Channel(Channel[MessageProtocol]):
-    def check_range(self, value: float) -> bool:
-        if self._channel_id == '1':
-            return in_set(0.01, 0.100, 1.0, 10.0, 100.0)(value)
-        else:
-            return in_set(0.100, 1.0, 10.0)(value)
-
-    voltage_range = instance_control(
+    voltage_range = basic_control(
         float,
         """Control the positive full-scale measurement voltage range in Volts.
         The Keithley 2182 selects a measurement range based on the expected voltage.
@@ -29,7 +21,7 @@ class Keithley2182Channel(Channel[MessageProtocol]):
         Auto-range is automatically disabled when this property is set.""",
         ':SENS:VOLT:CHAN{ch}:RANG?',
         ':SENS:VOLT:CHAN{ch}:RANG %g',
-        validate=check_range,
+        validate=for_channel({'1': in_set(0.01, 0.100, 1.0, 10.0, 100.0), '2': in_set(0.100, 1.0, 10.0)}),
     )
 
     voltage_range_auto_enabled = bool_control(
@@ -39,20 +31,14 @@ class Keithley2182Channel(Channel[MessageProtocol]):
         ':SENS:VOLT:CHAN{ch}:RANG:AUTO %s',
     )
 
-    def check_offset(self, value: float) -> bool:
-        if self._channel_id == '1':
-            return in_range_inc(-120.0, 120.0)(value)
-        else:
-            return in_range_inc(-12.0, 12.0)(value)
-
-    voltage_offset = instance_control(
+    voltage_offset = basic_control(
         float,
         """Control the relative offset for measuring voltage.
         Displayed value = actual value - offset value.
         Valid ranges are -120 V to +120 V for Ch. 1, and -12 V to +12 V for Ch. 2.""",
         ':SENS:VOLT:CHAN{ch}:REF?',
         ':SENS:VOLT:CHAN{ch}:REF %g',
-        validate=check_offset,
+        validate=for_channel({'1': in_range_inc(-120.0, 120.0), '2': in_range_inc(-12.0, 12.0)}),
     )
 
     temperature_offset = basic_control(
@@ -83,7 +69,7 @@ class Keithley2182Channel(Channel[MessageProtocol]):
     )
 
 
-class Keithley2182(SCPIMixin, KeithleyMixin, Instrument):
+class Keithley2182(KeithleyMixin, SCPIMixin, Instrument):
     active_channel = basic_control(
         int,
         """Control which channel is active for measurement.""",
@@ -95,6 +81,11 @@ class Keithley2182(SCPIMixin, KeithleyMixin, Instrument):
     channel_1 = Keithley2182Channel.make('1')
     channel_2 = Keithley2182Channel.make('2')
 
-    @override
-    def check_function(self: MessageProtocol, function: KeithleyMixin.ChannelFunction) -> bool:
-        return function in [KeithleyMixin.ChannelFunction.Voltage, KeithleyMixin.ChannelFunction.Temperature]
+    function = basic_control(
+        KeithleyMixin.ChannelFunction,
+        """Control the measurement mode of the active channel.""",
+        ':SENS:FUNC?',
+        ':SENS:FUNC %s',
+        set_format=lambda value: value.value,
+        validate=in_set(KeithleyMixin.ChannelFunction.Voltage, KeithleyMixin.ChannelFunction.Temperature),
+    )

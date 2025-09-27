@@ -113,7 +113,7 @@ def _replace_properties[T: MessageProtocol](cls: type[T], defaults: dict[str, An
 def make_virtual[T: Instrument](cls: type[T], defaults: dict[str, Any] | None = None) -> T:
     virtual_cls = _make_virtual_class(cls, defaults)
 
-    return virtual_cls(NullAdapter(), False)
+    return virtual_cls(NullAdapter())
 
 
 def is_virtual(obj: object) -> bool:

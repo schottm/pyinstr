@@ -8,7 +8,8 @@ This file is part of PyINSTR.
 import time
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from threading import Lock
+from contextlib import nullcontext
+from types import TracebackType
 from typing import Any, ClassVar, Protocol, override, runtime_checkable
 
 from pyinstr.property import Property
@@ -41,11 +42,26 @@ class MessageProtocol(Protocol):
     def query(self, command: str, delay: float | None = None) -> str: ...
 
 
+class ContextProtocol[T](Protocol):
+    def __enter__(self, /) -> T: ...
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        exc_traceback: TracebackType | None,
+        /,
+    ) -> bool | None: ...
+
+
+_NullContext = nullcontext()
+
+
 class Instrument(MessageBase):
     adapter_options: ClassVar[dict[type[Adapter], dict[str, Any]]] = {}
 
-    def __init__(self, adapter: Adapter, sync: bool = True) -> None:
-        self._lock = Lock() if sync else None
+    def __init__(self, adapter: Adapter, context: ContextProtocol[Any] = _NullContext) -> None:
+        self._context = context
         self._adapter = adapter
 
         if (options := self.adapter_options.get(type(self._adapter))) is not None:
@@ -55,22 +71,20 @@ class Instrument(MessageBase):
     def send(self, command: str) -> None:
         if command == '':
             return
-        if self._lock is not None:
-            with self._lock:
-                self._adapter.write(command)
-                return
+        with self._context:
+            self._adapter.write(command)
+            return
         self._adapter.write(command)
 
     @override
     def query(self, command: str, delay: float | None = None) -> str:
         if command == '':
             return ''
-        if self._lock is not None:
-            with self._lock:
-                self._adapter.write(command)
-                if delay is not None:
-                    time.sleep(delay)
-                return self._adapter.read()
+        with self._context:
+            self._adapter.write(command)
+            if delay is not None:
+                time.sleep(delay)
+            return self._adapter.read()
         self._adapter.write(command)
         if delay is not None:
             time.sleep(delay)

@@ -43,6 +43,9 @@ select = [
     "N",    # Naming conventions
     "I",    # Import sorting
 ]
+ignore = [
+    "ANN401"
+]
 
 [tool.ruff.format]
 quote-style = "single"

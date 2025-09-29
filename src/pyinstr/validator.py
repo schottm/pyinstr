@@ -20,21 +20,21 @@ class SupportsComparison(Protocol):
 
 
 def in_range[T: SupportsComparison](value_min: T, value_max: T) -> Callable[[Any, T], bool]:
-    def wrapper(_: Any, value: T) -> bool:  # noqa: ANN401
+    def wrapper(_: Any, value: T) -> bool:
         return value >= value_min and value < value_max
 
     return wrapper
 
 
 def in_range_inc[T: SupportsComparison](value_min: T, value_max: T) -> Callable[[Any, T], bool]:
-    def wrapper(_: Any, value: T) -> bool:  # noqa: ANN401
+    def wrapper(_: Any, value: T) -> bool:
         return value >= value_min and value <= value_max
 
     return wrapper
 
 
 def in_set[T](*values: T) -> Callable[[Any, T], bool]:
-    def wrapper(_: Any, value: T) -> bool:  # noqa: ANN401
+    def wrapper(_: Any, value: T) -> bool:
         return value in values
 
     return wrapper

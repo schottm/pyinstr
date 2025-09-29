@@ -7,7 +7,7 @@ This file is part of PyINSTR.
 
 import logging
 from enum import Enum
-from typing import Any, TypedDict, override
+from typing import Any, TypedDict, Unpack, override
 
 from pyvisa import ResourceManager
 from pyvisa.constants import ControlFlow, Parity, StopBits
@@ -18,7 +18,7 @@ from pyinstr import Adapter
 log = logging.getLogger(__name__)
 
 
-class VISAOptionDict(TypedDict):
+class VISAOptionDict(TypedDict, total=False):
     timeout: int
     read_termination: str
     write_termination: str
@@ -31,7 +31,7 @@ class InterfaceOption(Enum):
 
 
 class VISAAdapter(Adapter):
-    def __init__(self, name: str, **kwargs: Any) -> None:  # noqa: ANN401
+    def __init__(self, name: str, **kwargs: Any) -> None:
         manager = ResourceManager()
         resource = manager.open_resource(name, **kwargs)
         if not isinstance(resource, MessageBasedResource):
@@ -45,7 +45,7 @@ class VISAAdapter(Adapter):
         board: int | None = None,
         sub_address: int | None = None,
         interface: InterfaceOption | None = None,
-        **kwargs: VISAOptionDict,
+        **kwargs: Unpack[VISAOptionDict],
     ) -> T:
         name = 'GPIB'
         if board is not None:
@@ -66,9 +66,10 @@ class VISAAdapter(Adapter):
         parity: Parity | None = None,
         stop_bits: StopBits | None = None,
         flow_control: ControlFlow | None = None,
-        **kwargs: VISAOptionDict,
+        **kwargs: Unpack[VISAOptionDict],
     ) -> T:
-        kwargs_edit: dict[str, Any] = kwargs
+        kwargs_edit: dict[str, Any] = {}
+        kwargs_edit.update(kwargs)
         if baud_rate is not None:
             kwargs_edit.setdefault('baud_rate', baud_rate)
         if data_bits is not None:
@@ -90,7 +91,7 @@ class VISAAdapter(Adapter):
         address: str,
         port: int,
         board: int | None = None,
-        **kwargs: VISAOptionDict,
+        **kwargs: Unpack[VISAOptionDict],
     ) -> T:
         name = 'TCPIP'
         if board is not None:

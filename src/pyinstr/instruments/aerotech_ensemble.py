@@ -199,7 +199,7 @@ class AerotechEnsemble(Instrument):
 
     version = basic_control(
         str,
-        """Get version of the device"""
+        """Get version of the device""",
         'VERSION',
         None,
         pre_format=_pre_format,
@@ -214,4 +214,4 @@ class AerotechEnsemble(Instrument):
         response=ignore,
     )
 
-    axis_x = AxisControl.make('X')
+    axes = AxisControl.make_dynamic()

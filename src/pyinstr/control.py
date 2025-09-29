@@ -42,7 +42,7 @@ def ignore(_value: str) -> None:
     pass
 
 
-def always[T](_self: MessageProtocol, _value: Any) -> bool:  # noqa: ANN401
+def always[T](_self: MessageProtocol, _value: Any) -> bool:
     return True
 
 

@@ -1,0 +1,84 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+jobs:
+  build_sdist:
+    name: Build sdist
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Get history and tags for SCM versioning to work
+        run: |
+          git fetch --prune --unshallow
+          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+      - name: Setup Python
+        uses: actions/setup-python@v5
+      - name: Build sdist
+        run: |
+          pip install --upgrade pip
+          pip install wheel build
+          python -m build . -s
+      # - name: Test sdist
+      #   run: |
+      #     pip install pytest
+      #     pip install dist/*.tar.gz
+      #     python -X dev -m pytest --pyargs pyinstr
+      - name: Store artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cibw-sdist
+          path: dist/*
+
+  build_wheel:
+    name: Build wheel
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Get history and tags for SCM versioning to work
+        run: |
+          git fetch --prune --unshallow
+          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+      - name: Setup Python
+        uses: actions/setup-python@v5
+      - name: Build wheels
+        run: |
+          pip install --upgrade pip
+          pip install wheel build
+          python -m build . -w
+      # - name: Test wheel
+      #   run: |
+      #     pip install pytest
+      #     pip install dist/*.whl
+      #     python -X dev -m pytest --pyargs pyinstr
+      - name: Store artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheels
+          path: dist/*.whl
+
+  github_release:
+    name: Create GitHub Release
+    needs: [build_wheel, build_sdist]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v5.0.0
+        with:
+          pattern: cibw-*
+          path: dist
+          merge-multiple: true
+
+      - name: Create GitHub Release
+        id: create_release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create '${{ github.ref_name }}' --repo '${{ github.repository }}' --generate-notes dist/**

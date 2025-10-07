@@ -8,7 +8,7 @@ This file is part of PyINSTR.
 from importlib.metadata import PackageNotFoundError, version
 
 try:
-    __version__ = version('package-name')
+    __version__ = version('pyinstr')
 except PackageNotFoundError:
     # package is not installed
     pass
@@ -26,7 +26,7 @@ from .control import (
     optional_control,
 )
 from .message import Adapter, Channel, Instrument, MessageProtocol
-from .virtual import default_registry, is_virtual, make_virtual
+from .virtual import default_registry, inject_real, inject_virtual, is_virtual, make_virtual
 
 __all__ = [
     'Adapter',
@@ -42,6 +42,8 @@ __all__ = [
     'enum_control',
     'flag_control',
     'ignore',
+    'inject_real',
+    'inject_virtual',
     'is_virtual',
     'make_virtual',
     'noop',

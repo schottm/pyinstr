@@ -90,6 +90,10 @@ class Instrument(MessageBase):
             time.sleep(delay)
         return self._adapter.read()
 
+    def close(self) -> None:
+        with self._context:
+            del self._adapter  # this will throw errors if the communication is used after closing the instrument.
+
 
 class ChannelDict[B: MessageProtocol, T: Channel[MessageProtocol]](defaultdict[str, T]):
     def __init__(self, type_: type[T], base: B, *channel_ids: str, dynamic: bool = False) -> None:

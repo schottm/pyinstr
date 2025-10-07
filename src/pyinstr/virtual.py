@@ -6,16 +6,21 @@ This file is part of PyINSTR.
 """
 
 import copy
+from contextlib import nullcontext
 from enum import IntFlag, StrEnum
 from typing import Any
 
 from pyinstr.adapters import NullAdapter
 from pyinstr.control import ControlProperty
 from pyinstr.message import (
+    Adapter,
     Channel,
     ChannelProperty,
+    ContextProtocol,
     Instrument,
     MessageProtocol,
+    MultiChannelFactory,
+    SingleChannelFactory,
 )
 from pyinstr.property import Property
 from pyinstr.type_registry import DefaultTypeRegistry
@@ -92,7 +97,7 @@ def _inject_channel_property[B: MessageProtocol, T: Channel[MessageProtocol], R]
     prop.factory.type_ = _make_virtual_class(prop.factory.type_, defaults)
 
 
-def _replace_properties[T: MessageProtocol](cls: type[T], defaults: dict[str, Any] | None) -> None:
+def _replace_properties[T: MessageProtocol](cls: type[T], defaults: dict[str, Any] | None) -> None:  #
     for name, val in vars(cls).items():
         if name.startswith('__') or callable(name):
             continue
@@ -110,6 +115,39 @@ def _replace_properties[T: MessageProtocol](cls: type[T], defaults: dict[str, An
             raise ValueError('Unkown property defined in instrument.')
 
 
+def _inject_channel_instance[B: MessageProtocol, T: Channel[MessageProtocol], R](
+    parent: B, prop: ChannelProperty[B, T, R]
+) -> None:
+    if not hasattr(parent, f'_{prop.name}'):
+        return
+    if isinstance(prop.factory, SingleChannelFactory):
+        channel: T = prop.__get__(parent)  # type: ignore[reportAssignmentType]
+        _inject_instance(prop.factory.type_, channel)  # type: ignore[reportUnknownArgumentType, reportUnknownMemberType]
+    elif isinstance(prop.factory, MultiChannelFactory):
+        channels: dict[str, T] = prop.__get__(parent)  # type: ignore[reportAssignmentType]
+        for channel in channels.values():
+            _inject_instance(prop.factory.type_, channel)
+    else:
+        raise RuntimeError('Unknown channel factory encountered.')
+
+
+def _inject_instance[T: MessageProtocol](cls: type[T], obj: T) -> None:
+    obj.__class__ = cls
+
+    for name, val in vars(cls).items():
+        if name.startswith('__') or callable(name):
+            continue
+        if isinstance(val, ControlProperty):
+            continue
+        elif isinstance(val, ChannelProperty):
+            _inject_channel_instance(
+                obj,
+                val,  # type: ignore[reportUnknownArgumentType]
+            )
+        elif isinstance(val, Property):
+            raise ValueError('Unkown property defined in instrument.')
+
+
 def make_virtual[T: Instrument](cls: type[T], defaults: dict[str, Any] | None = None) -> T:
     virtual_cls = _make_virtual_class(cls, defaults)
 
@@ -119,3 +157,26 @@ def make_virtual[T: Instrument](cls: type[T], defaults: dict[str, Any] | None = 
 def is_virtual(obj: object) -> bool:
     cls = obj if isinstance(obj, type) else type(obj)
     return hasattr(cls, _VIRTUAL)
+
+
+_NullContext = nullcontext()
+
+
+def inject_virtual(inst: Instrument, defaults: dict[str, Any] | None = None) -> None:
+    if is_virtual(inst):  # is already virtual
+        return
+    inst.close()
+    # create a new virtual class
+    virtual_cls = _make_virtual_class(inst.__class__, defaults)
+    # inject the class into the instrument and its channels
+    _inject_instance(virtual_cls, inst)
+    inst.__init__(NullAdapter(), _NullContext)
+
+
+def inject_real(inst: Instrument, adapter: Adapter, context: ContextProtocol[Any] = _NullContext) -> None:
+    if not is_virtual(inst):  # is already real
+        return
+    inst.close()
+    # remap the instrument and all its channels back to the base
+    _inject_instance(inst.__class__.__base__, inst)  # type: ignore[reportArgumentType]
+    inst.__init__(adapter, context)

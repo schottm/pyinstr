@@ -66,10 +66,8 @@ class ExampleInstrument(SCPIMixin, Instrument):
     """
 
 
-inst = ExampleInstrument(NullAdapter())
-
-print(inst.value)
-
-print(inst.test.value)
-
-print(inst.identity)  # provided by the SCPIMixin
+if __name__ == '__main__':
+    inst = ExampleInstrument(NullAdapter())
+    print(inst.value)
+    print(inst.test.value)
+    print(inst.identity)  # provided by the SCPIMixin

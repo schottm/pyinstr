@@ -6,12 +6,21 @@ This file is part of PyINSTR.
 """
 
 from enum import IntFlag, StrEnum
+from typing import ClassVar
 
 from pyinstr import BoolFormat, bool_control, enum_control, flag_control
+from pyinstr.adapters import VISAAdapter
 from pyinstr.instruments.channels import KeysightControlChannel
 
 
 class KeysightSupplyMixin:
+    adapter_options: ClassVar = {
+        VISAAdapter: {
+            'read_termination': '\n',
+            'write_termination': '\n',
+        }
+    }
+
     class PriorityMode(StrEnum):
         Current = 'CURR'
         Voltage = 'VOLT'

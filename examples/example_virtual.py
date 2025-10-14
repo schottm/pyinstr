@@ -15,12 +15,17 @@ virt_inst = make_virtual(ExampleInstrument, defaults={'identity': 'virt_instrume
 print(virt_inst.identity)
 virt_inst.identity = 'new_identity'
 print(virt_inst.identity)
+print(virt_inst.value_list)
 
 # or change a instrument instance to a virtual instrument using inject_virtual. (e.g. if the instrument disconnected)
 inst = ExampleInstrument(NullAdapter())
 print(inst.test.value)
+print(inst.test_multiple)
+print(inst.test_dynamic)
 inject_virtual(inst, defaults={'identity': 'injected_instrument'})
 print(inst.identity)
+print(inst.test_multiple)
+print(inst.test_dynamic)
 
 # you can promote a virtual instrument to a real instrument using the inject_real method.
 inject_real(virt_inst, NullAdapter())

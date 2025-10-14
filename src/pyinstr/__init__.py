@@ -22,6 +22,7 @@ from .control import (
     enum_control,
     flag_control,
     ignore,
+    list_control,
     noop,
     optional_control,
 )
@@ -45,6 +46,7 @@ __all__ = [
     'inject_real',
     'inject_virtual',
     'is_virtual',
+    'list_control',
     'make_virtual',
     'noop',
     'optional_control',

@@ -5,7 +5,7 @@ This file is part of PyINSTR.
 :license: MIT, see LICENSE for more details.
 """
 
-from pyinstr import Channel, Instrument, MessageProtocol, basic_control
+from pyinstr import Channel, Instrument, MessageProtocol, basic_control, list_control
 from pyinstr.adapters import NullAdapter
 from pyinstr.instruments.mixins import SCPIMixin
 
@@ -64,6 +64,13 @@ class ExampleInstrument(SCPIMixin, Instrument):
     """
     This is a minimal channel control to get/set a specified value on the instrument.
     """
+
+    value_list = list_control(
+        float,
+        'Example list',
+        'GET:COMMAND:FOR:LIST?',
+        'SET:COMMAND:FOR:LIST %s',
+    )
 
 
 if __name__ == '__main__':

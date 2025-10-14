@@ -96,7 +96,10 @@ def basic_control[S: MessageProtocol, T](
         if set_cmd is None:
             raise ValueError('Cannot set value without command!')
         if not isinstance(value, type_):
-            raise ValueError(f'{value} is not of type {type_}.')
+            try:
+                value = type_(value)  # pyright: ignore[reportCallIssue]
+            except Exception as exc:
+                raise ValueError(f'{value} is not of type {type_}.') from exc
         if validate is not None:
             if not validate(self, value):
                 raise ValueError('Invalid value given!')
@@ -235,5 +238,39 @@ def flag_control[S: MessageProtocol, F: IntFlag](
     )
 
 
-def list_control[T](type_: type[T], doc: str) -> Property[MessageProtocol, list[T]]:
-    raise NotImplementedError('Not implemented!')
+def _list_to_string[T](data: list[T], delimiter: str) -> str:
+    entries = (str(entry) for entry in data)
+    return delimiter.join(entries)
+
+
+def _string_to_list[T](data: str, delimiter: str, convert: Callable[[str], T]) -> list[T]:
+    entries = data.split(delimiter)
+    return [convert(entry) for entry in entries]
+
+
+def list_control[S: MessageProtocol, T](
+    type_: type[T],
+    doc: str,
+    get_cmd: str | None = None,
+    set_cmd: str | None = None,
+    /,
+    delimiter: str = ',',
+    get_format: Callable[[str], list[T]] | None = None,
+    set_format: Callable[[list[T]], Any] | None = None,
+    pre_format: Callable[[S, str], str] = noop,
+    validate: Callable[[S, list[T]], bool] = always,
+    response: Callable[[str], None] | None = None,
+) -> Property[S, list[T]]:
+    return basic_control(
+        list[type_],
+        doc,
+        get_cmd,
+        set_cmd,
+        get_format=(lambda x: _string_to_list(x, delimiter, lambda value: convert_registry.get(type_)(type_, value)))
+        if get_format is None
+        else get_format,
+        set_format=(lambda x: _list_to_string(x, delimiter)) if set_format is None else set_format,
+        pre_format=pre_format,
+        validate=validate,
+        response=response,
+    )

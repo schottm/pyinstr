@@ -6,9 +6,10 @@ This file is part of PyINSTR.
 """
 
 import copy
+from collections.abc import Iterable
 from contextlib import nullcontext
 from enum import IntFlag, StrEnum
-from typing import Any
+from typing import Any, cast
 
 from pyinstr.adapters import NullAdapter
 from pyinstr.control import ControlProperty
@@ -32,6 +33,7 @@ default_registry.register(str, '')
 default_registry.register(bool, False)
 default_registry.register(StrEnum, lambda type_: next(iter(type_)))
 default_registry.register(IntFlag, lambda type_: type_(0))
+default_registry.register(list, [])
 
 _VIRTUAL = '__virtual_instrument__'
 
@@ -120,13 +122,14 @@ def _inject_channel_instance[B: MessageProtocol, T: Channel[MessageProtocol], R]
 ) -> None:
     if not hasattr(parent, f'_{prop.name}'):
         return
+    type_ = prop.factory.type_
     if isinstance(prop.factory, SingleChannelFactory):
         channel: T = prop.__get__(parent)  # type: ignore[reportAssignmentType]
-        _inject_instance(prop.factory.type_, channel)  # type: ignore[reportUnknownArgumentType, reportUnknownMemberType]
+        _inject_instance(type_, channel)  # type: ignore[reportUnknownArgumentType, reportUnknownMemberType]
     elif isinstance(prop.factory, MultiChannelFactory):
-        channels: dict[str, T] = prop.__get__(parent)  # type: ignore[reportAssignmentType]
-        for channel in channels.values():
-            _inject_instance(prop.factory.type_, channel)
+        channels = cast(Iterable[T], prop.__get__(parent).values())  # type: ignore[reportAssignmentType]
+        for channel in channels:
+            _inject_instance(type_, channel)
     else:
         raise RuntimeError('Unknown channel factory encountered.')
 

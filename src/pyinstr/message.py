@@ -95,14 +95,14 @@ class Instrument(MessageBase):
             del self._adapter  # this will throw errors if the communication is used after closing the instrument.
 
 
-class ChannelDict[B: MessageProtocol, T: Channel[MessageProtocol]](defaultdict[str, T]):
-    def __init__(self, type_: type[T], base: B, *channel_ids: str, dynamic: bool = False) -> None:
+class ChannelDict[B: MessageProtocol, I, T: Channel[MessageProtocol]](defaultdict[I, T]):
+    def __init__(self, type_: type[T], base: B, *channel_ids: I, dynamic: bool = False) -> None:
         super().__init__()
         self._type_ = type_
         self._base = base
         self._dynamic = dynamic
         for channel_id in channel_ids:
-            self[channel_id] = type_(self._base, channel_id)
+            self[channel_id] = type_(self._base, str(channel_id))
 
     @property
     def type_(self) -> type[T]:
@@ -116,10 +116,10 @@ class ChannelDict[B: MessageProtocol, T: Channel[MessageProtocol]](defaultdict[s
     def dynamic(self) -> bool:
         return self._dynamic
 
-    def __missing__(self, key: str) -> T:
+    def __missing__(self, key: I) -> T:
         if not self._dynamic:
             raise ValueError('This is not a dynamic channel dictionary.')
-        value = self._type_(self._base, key)
+        value = self._type_(self._base, str(key))
         self[key] = value
         return value
 
@@ -149,14 +149,14 @@ class SingleChannelFactory[B: MessageProtocol, T: Channel[MessageProtocol]](Chan
         return self._type_(base, self._channel_id)
 
 
-class MultiChannelFactory[B: MessageProtocol, T: Channel[MessageProtocol]](ChannelFactory[B, T, dict[str, T]]):
-    def __init__(self, type_: type[T], *channel_ids: str, dynamic: bool = False) -> None:
+class MultiChannelFactory[B: MessageProtocol, I, T: Channel[MessageProtocol]](ChannelFactory[B, T, dict[I, T]]):
+    def __init__(self, type_: type[T], *channel_ids: I, dynamic: bool = False) -> None:
         super().__init__(type_)
         self._channel_ids = channel_ids
         self._dynamic = dynamic
 
     @override
-    def make(self, base: B) -> dict[str, T]:
+    def make(self, base: B) -> dict[I, T]:
         return ChannelDict(self._type_, base, *self._channel_ids, dynamic=self._dynamic)
 
 
@@ -215,9 +215,9 @@ class Channel[P: MessageProtocol](MessageBase):
         return ChannelProperty(SingleChannelFactory(cls, channel_id), doc=doc)
 
     @classmethod
-    def make_multiple[T: Channel[MessageProtocol]](
-        cls: type[T], *channel_ids: str, doc: str | None = None
-    ) -> Property[MessageProtocol, dict[str, T]]:
+    def make_multiple[I, T: Channel[MessageProtocol]](
+        cls: type[T], *channel_ids: I, doc: str | None = None
+    ) -> Property[MessageProtocol, dict[I, T]]:
         return ChannelProperty(
             MultiChannelFactory(cls, *channel_ids, dynamic=False),
             doc=doc,
@@ -228,6 +228,6 @@ class Channel[P: MessageProtocol](MessageBase):
         cls: type[T], doc: str | None = None
     ) -> Property[MessageProtocol, dict[str, T]]:
         return ChannelProperty(
-            MultiChannelFactory(cls, dynamic=True),
+            MultiChannelFactory[MessageProtocol, str, T](cls, dynamic=True),
             doc=doc,
         )

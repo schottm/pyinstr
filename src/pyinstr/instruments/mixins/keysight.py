@@ -8,9 +8,9 @@ This file is part of PyINSTR.
 from enum import IntFlag, StrEnum
 from typing import ClassVar
 
-from pyinstr import BoolFormat, bool_control, enum_control, flag_control
+from pyinstr import BoolFormat, MessageProtocol, bool_control, enum_control, flag_control
 from pyinstr.adapters import VISAAdapter
-from pyinstr.instruments.channels import KeysightControlChannel
+from pyinstr.instruments.channels import KeysightControlChannel, KeysightListChannel, KeysightPinChannel
 
 
 class KeysightSupplyMixin:
@@ -54,6 +54,8 @@ class KeysightSupplyMixin:
 
     current = KeysightControlChannel.make('CURR')
     voltage = KeysightControlChannel.make('VOLT')
+    pins = KeysightPinChannel.make_multiple(*range(1, 8))
+    list = KeysightListChannel.make('')
 
     function = enum_control(
         PriorityMode,
@@ -82,3 +84,16 @@ class KeysightSupplyMixin:
         'STAT:QUES1:COND?',
         None,
     )
+
+    step_output_enabled = bool_control(
+        BoolFormat.OneZero,
+        """Specifies whether a trigger out is generated when a transient step occurs.""",
+        'STEP:TOUT?',
+        'STEP:TOUT %s',
+    )
+
+    def inititate_transient(self: MessageProtocol) -> None:
+        self.send('INIT:IMM:TRAN')
+
+    def trigger_transient(self: MessageProtocol) -> None:
+        self.send('TRIG:TRAN:IMM')

@@ -95,7 +95,7 @@ def basic_control[S: MessageProtocol, T](
     def _setter(self: S, value: T) -> None:
         if set_cmd is None:
             raise ValueError('Cannot set value without command!')
-        if not isinstance(value, type_):
+        if type(value) is type_:
             try:
                 value = type_(value)  # pyright: ignore[reportCallIssue]
             except Exception as exc:
@@ -244,6 +244,8 @@ def _list_to_string[T](data: list[T], delimiter: str) -> str:
 
 
 def _string_to_list[T](data: str, delimiter: str, convert: Callable[[str], T]) -> list[T]:
+    if data == '':
+        return []
     entries = data.split(delimiter)
     return [convert(entry) for entry in entries]
 

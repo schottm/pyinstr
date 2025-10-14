@@ -8,7 +8,7 @@ This file is part of PyINSTR.
 from enum import StrEnum
 from typing import ClassVar
 
-from pyinstr import BoolFormat, basic_control, bool_control, enum_control
+from pyinstr import BoolFormat, MessageProtocol, basic_control, bool_control, enum_control
 from pyinstr.adapters import VISAAdapter
 from pyinstr.validator import in_range_inc
 
@@ -58,6 +58,12 @@ class KeithleyMixin:
         float,
         """Performs an ABORt, INITiate, and a FETCh?.""",
         ':READ?',
+    )
+
+    fresh = basic_control(
+        float,
+        """Return a new (fresh) reading. Waits if no reading is available.""",
+        ':SENS:DATA:FRESh?',
     )
 
     function = enum_control(
@@ -121,3 +127,9 @@ class KeithleyMixin:
         ':FORM:ELEM?',
         ':FORM:ELEM %s',
     )
+
+    def abort(self: MessageProtocol) -> None:
+        self.send(':ABOR')
+
+    def initiate(self: MessageProtocol) -> None:
+        self.send(':INIT')

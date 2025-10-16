@@ -8,9 +8,51 @@ This file is part of PyINSTR.
 from enum import IntFlag, StrEnum
 from typing import ClassVar
 
-from pyinstr import BoolFormat, MessageProtocol, bool_control, enum_control, flag_control
+from pyinstr import BoolFormat, MessageProtocol, basic_control, bool_control, enum_control, flag_control, list_control
 from pyinstr.adapters import VISAAdapter
-from pyinstr.instruments.channels import KeysightControlChannel, KeysightListChannel, KeysightPinChannel
+from pyinstr.instruments.channels import KeysightControlChannel, KeysightPinChannel
+
+
+class KeysightListMixin:
+    class ListStep(StrEnum):
+        Auto = 'AUTO'
+        Once = 'ONCE'
+
+    list_count = basic_control(
+        int,
+        """Get/set the number of list entires.""",
+        'LIST:COUN?',
+        'LIST:COUN %d',
+    )
+
+    list_dwell = list_control(
+        float,
+        """Get/set the dwell times for each list entry.""",
+        'LIST:DWEL?',
+        'LIST:DWEL %s',
+    )
+
+    list_step = enum_control(
+        ListStep,
+        """Select either Dwell paced or Trigger paced.""",
+        'LIST:STEP?',
+        'LIST:STEP %s',
+    )
+
+    list_trigger_begin_output = list_control(
+        int,
+        'Get/set the steps when trigger is send at the beginning.',
+        'LIST:TOUT:BOST?',
+        'LIST:TOUT:BOST %s',
+    )
+
+    list_trigger_end_output = list_control(
+        int,
+        'Get/set the steps when trigger is send at the end.',
+        'LIST:TOUT:EOST?',
+        'LIST:TOUT:EOST %s',
+    )
+
 
 
 class KeysightSupplyMixin:
@@ -55,7 +97,6 @@ class KeysightSupplyMixin:
     current = KeysightControlChannel.make('CURR')
     voltage = KeysightControlChannel.make('VOLT')
     pins = KeysightPinChannel.make_multiple(*range(1, 8))
-    list = KeysightListChannel.make('')
 
     function = enum_control(
         PriorityMode,

@@ -8,9 +8,57 @@ This file is part of PyINSTR.
 from enum import StrEnum
 from typing import ClassVar
 
-from pyinstr import BoolFormat, MessageProtocol, basic_control, bool_control, enum_control
+from pyinstr import BoolFormat, MessageProtocol, basic_control, bool_control, enum_control, list_control
 from pyinstr.adapters import VISAAdapter
 from pyinstr.validator import in_range_inc
+
+
+class KeithleyBufferMixin:
+    class BufferSource(StrEnum):
+        Sense = 'SENS'
+        Calculate = 'CALC'
+        Nothing = 'NONE'
+
+    class BufferMode(StrEnum):
+        Never = 'NEV'
+        Next = 'NEXT'
+
+    buffer_free = basic_control(
+        int,
+        """Query bytes available and bytes in use.""",
+        ':TRAC:FREE?',
+    )
+
+    buffer_points = basic_control(
+        int,
+        """Specify number of readings to store (2 to 1024).""",
+        ':TRAC:POIN?',
+        ':TRAC:POIN %d',
+    )
+
+    buffer_feed = enum_control(
+        BufferSource,
+        """Select source of readings.""",
+        ':TRAC:FEED?',
+        ':TRAC:FEED %s',
+    )
+
+    buffer_control = enum_control(
+        BufferMode,
+        """Select buffer control mode.""",
+        ':TRAC:FEED:CONT?',
+        ':TRAC:FEED:CONT %s',
+    )
+
+    buffer_data = list_control(
+        float,
+        """Get the buffer data.""",
+        ':TRAC:DATA?',
+    )
+
+    def buffer_clear(self : MessageProtocol) -> None:
+        self.send(':TRAC:CLE')
+
 
 
 class KeithleyMixin:
@@ -85,6 +133,14 @@ class KeithleyMixin:
         """Controls the trigger count.""",
         ':TRIG:COUN?',
         ':TRIG:COUN %d',
+        validate=in_range_inc(1, 55000),
+    )
+
+    sample_count = basic_control(
+        int,
+        """Controls the sample count.""",
+        ':SAMP:COUN?',
+        ':SAMP:COUN %d',
         validate=in_range_inc(1, 55000),
     )
 

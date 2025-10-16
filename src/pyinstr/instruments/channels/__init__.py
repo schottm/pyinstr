@@ -5,16 +5,13 @@ This file is part of PyINSTR.
 :license: MIT, see LICENSE for more details.
 """
 
-from .keithley import KeithleyBufferChannel
-from .keysight import KeysightControlChannel, KeysightListChannel, KeysightPinChannel
+from .keysight import KeysightControlChannel, KeysightPinChannel
 from .mercury import FlowControl, HeaterControl, LevelSensor, MagnetControl, TemperatureLoopControl, TemperatureSensor
 
 __all__ = [
     'FlowControl',
     'HeaterControl',
-    'KeithleyBufferChannel',
     'KeysightControlChannel',
-    'KeysightListChannel',
     'KeysightPinChannel',
     'LevelSensor',
     'MagnetControl',

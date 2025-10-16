@@ -6,8 +6,7 @@ This file is part of PyINSTR.
 """
 
 from pyinstr import BoolFormat, Channel, Instrument, MessageProtocol, basic_control, bool_control
-from pyinstr.instruments.channels import KeithleyBufferChannel
-from pyinstr.instruments.mixins import KeithleyMixin, SCPIMixin
+from pyinstr.instruments.mixins import KeithleyBufferMixin, KeithleyMixin, SCPIMixin
 from pyinstr.validator import for_channel, in_range_inc, in_set
 
 
@@ -70,7 +69,7 @@ class Keithley2182Channel(Channel[MessageProtocol]):
     )
 
 
-class Keithley2182(KeithleyMixin, SCPIMixin, Instrument):
+class Keithley2182(KeithleyMixin, KeithleyBufferMixin, SCPIMixin, Instrument):
     active_channel = basic_control(
         int,
         """Control which channel is active for measurement.""",
@@ -81,8 +80,6 @@ class Keithley2182(KeithleyMixin, SCPIMixin, Instrument):
 
     channel_1 = Keithley2182Channel.make('1')
     channel_2 = Keithley2182Channel.make('2')
-
-    buffer = KeithleyBufferChannel.make('')
 
     function = basic_control(
         KeithleyMixin.ChannelFunction,

@@ -1,14 +1,22 @@
 from pyinstr import BoolFormat, Channel, Instrument, MessageProtocol, basic_control, bool_control
-from pyinstr.instruments.mixins import KeithleyMixin, SCPIMixin
-from pyinstr.validator import in_range_inc
+from pyinstr.instruments.mixins import KeithleyBufferMixin, KeithleyMixin, SCPIMixin
+from pyinstr.validator import for_channel, in_range_inc
 
 
 class Keithley2700Channel(Channel[MessageProtocol]):
-    auto_range_enabled = bool_control(
+    voltage_range_auto_enabled = bool_control(
         BoolFormat.OneZero,
         """Controls the auto range.""",
         ':SENS:VOLT:{ch}:RANG:AUTO?',
         ':SENS:VOLT:{ch}:RANG:AUTO %s',
+    )
+
+    voltage_range = basic_control(
+        float,
+        """Select voltage range.""",
+        ':SENS:VOLT:{ch}:RANG?',
+        ':SENS:VOLT:{ch}:RANG %g',
+        validate=for_channel({'DC': in_range_inc(0.0, 1000.0), 'AC': in_range_inc(0.0, 757.5)}),
     )
 
     digits = basic_control(
@@ -20,7 +28,7 @@ class Keithley2700Channel(Channel[MessageProtocol]):
     )
 
 
-class Keithley2700(KeithleyMixin, SCPIMixin, Instrument):
+class Keithley2700(KeithleyMixin, KeithleyBufferMixin, SCPIMixin, Instrument):
     dc = Keithley2700Channel.make('DC')
     ac = Keithley2700Channel.make('AC')
 

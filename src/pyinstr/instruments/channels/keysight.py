@@ -40,47 +40,6 @@ class KeysightPinChannel(Channel[MessageProtocol]):
     )
 
 
-class KeysightListChannel(Channel[MessageProtocol]):
-    class Step(StrEnum):
-        Auto = 'AUTO'
-        Once = 'ONCE'
-
-    count = basic_control(
-        int,
-        """Get/set the number of list entires.""",
-        'LIST:COUN?',
-        'LIST:COUN %d',
-    )
-
-    dwell = list_control(
-        float,
-        """Get/set the dwell times for each list entry.""",
-        'LIST:DWEL?',
-        'LIST:DWEL %s',
-    )
-
-    step = enum_control(
-        Step,
-        """Select either Dwell paced or Trigger paced.""",
-        'LIST:STEP?',
-        'LIST:STEP %s',
-    )
-
-    trigger_begin_output = list_control(
-        int,
-        'Get/set the steps when trigger is send at the beginning.',
-        'LIST:TOUT:BOST?',
-        'LIST:TOUT:BOST %s',
-    )
-
-    trigger_end_output = list_control(
-        int,
-        'Get/set the steps when trigger is send at the end.',
-        'LIST:TOUT:EOST?',
-        'LIST:TOUT:EOST %s',
-    )
-
-
 class KeysightControlChannel(Channel[MessageProtocol]):
     value = basic_control(
         float,

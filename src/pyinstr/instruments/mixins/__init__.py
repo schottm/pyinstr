@@ -5,9 +5,9 @@ This file is part of PyINSTR.
 :license: MIT, see LICENSE for more details.
 """
 
-from .keithley import KeithleyMixin
+from .keithley import KeithleyBufferMixin, KeithleyMixin
 from .keysight import KeysightSupplyMixin
 from .mercury import MercuryMixin
 from .scpi import SCPIMixin
 
-__all__ = ['KeithleyMixin', 'KeysightSupplyMixin', 'MercuryMixin', 'SCPIMixin']
+__all__ = ['KeithleyBufferMixin', 'KeithleyMixin', 'KeysightSupplyMixin', 'MercuryMixin', 'SCPIMixin']

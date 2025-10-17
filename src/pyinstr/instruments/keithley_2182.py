@@ -68,6 +68,12 @@ class Keithley2182Channel(Channel[MessageProtocol]):
         ':SENS:TEMP:CHAN{ch}:REF:STAT %s',
     )
 
+    def acquire_voltage_offset(self : MessageProtocol) -> None:
+        self.send(':SENS:VOLT:CHAN{ch}:REF:ACQ')
+
+    def acquire_temperature_offset(self : MessageProtocol) -> None:
+        self.send(':SENS:TEMP:CHAN{ch}:REF:ACQ')
+
 
 class Keithley2182(KeithleyMixin, KeithleyBufferMixin, SCPIMixin, Instrument):
     active_channel = basic_control(

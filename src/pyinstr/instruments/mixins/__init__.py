@@ -6,8 +6,15 @@ This file is part of PyINSTR.
 """
 
 from .keithley import KeithleyBufferMixin, KeithleyMixin
-from .keysight import KeysightSupplyMixin
+from .keysight import KeysightListMixin, KeysightSupplyMixin
 from .mercury import MercuryMixin
 from .scpi import SCPIMixin
 
-__all__ = ['KeithleyBufferMixin', 'KeithleyMixin', 'KeysightSupplyMixin', 'MercuryMixin', 'SCPIMixin']
+__all__ = [
+    'KeithleyBufferMixin',
+    'KeithleyMixin',
+    'KeysightListMixin',
+    'KeysightSupplyMixin',
+    'MercuryMixin',
+    'SCPIMixin',
+]

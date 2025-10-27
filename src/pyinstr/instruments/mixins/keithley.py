@@ -136,6 +136,13 @@ class KeithleyMixin:
         validate=in_range_inc(1, 55000),
     )
 
+    trigger_delay = basic_control(
+        float,
+        """Controls the trigger delay in seconds.""",
+        ':TRIG:DEL?',
+        ':TRIG:DEL %g',
+    )
+
     sample_count = basic_control(
         int,
         """Controls the sample count.""",

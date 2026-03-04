@@ -118,3 +118,7 @@ class VISAAdapter(Adapter):
                     {self._resource.resource_name} of
                     type {self._resource.interface_type.name}."""
                 )
+
+    def __str__(self) -> str:
+        name = self._resource.resource_info.resource_name
+        return name if name is not None else ''

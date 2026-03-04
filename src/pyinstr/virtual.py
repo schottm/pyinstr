@@ -176,7 +176,11 @@ def inject_virtual(inst: Instrument, defaults: dict[str, Any] | None = None) -> 
     inst.__init__(NullAdapter(), _NullContext)
 
 
-def inject_real(inst: Instrument, adapter: Adapter, context: ContextProtocol[Any] = _NullContext) -> None:
+def inject_real(
+    inst: Instrument,
+    adapter: Adapter,
+    context: ContextProtocol[Any] = _NullContext,
+) -> None:
     if not is_virtual(inst):  # is already real
         return
     inst.close()

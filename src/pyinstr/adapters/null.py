@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 class NullAdapter(Adapter):
     @override
     def read(self) -> str:
-        logger.info('Reading from instrument.')
-        return ''
+        logger.info("Reading from instrument.")
+        return ""
 
     @override
     def write(self, command: str) -> None:
@@ -27,3 +27,6 @@ class NullAdapter(Adapter):
     @override
     def apply(self, options: dict[str, Any]) -> None:
         pass
+
+    def __str__(self) -> str:
+        return "Null"

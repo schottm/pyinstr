@@ -8,6 +8,7 @@ This file is part of PyINSTR.
 import time
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from collections.abc import Callable
 from contextlib import nullcontext
 from types import TracebackType
 from typing import Any, ClassVar, Protocol, override, runtime_checkable
@@ -60,35 +61,74 @@ _NullContext = nullcontext()
 class Instrument(MessageBase):
     adapter_options: ClassVar[dict[type[Adapter], dict[str, Any]]] = {}
 
-    def __init__(self, adapter: Adapter, context: ContextProtocol[Any] = _NullContext) -> None:
+    def __init__(
+        self,
+        adapter: Adapter,
+        context: ContextProtocol[Any] = _NullContext,
+    ) -> None:
         self._context = context
         self._adapter = adapter
+        self._resolver: Callable[[BaseException, int], bool] | None = None
+        self._retries = 10
 
         if (options := self.adapter_options.get(type(self._adapter))) is not None:
             self._adapter.apply(options)
+
+    @property
+    def resolver(self) -> Callable[[BaseException, int], bool] | None:
+        return self._resolver
+
+    @resolver.setter
+    def resolver(self, resolver: Callable[[BaseException, int], bool] | None) -> None:
+        self._resolver = resolver
+
+    @property
+    def retries(self) -> int:
+        return self._retries
+
+    @retries.setter
+    def retires(self, retries: int) -> None:
+        self._retries = retries
 
     @override
     def send(self, command: str) -> None:
         if command == '':
             return
-        with self._context:
-            self._adapter.write(command)
-            return
-        self._adapter.write(command)
+        for i in range(self._retries):
+            try:
+                with self._context:
+                    self._adapter.write(command)
+                    return
+                self._adapter.write(command)
+            except BaseException as exc:
+                if self._resolver is not None:
+                    # should retry?
+                    if self._resolver(exc, i):
+                        continue
+                raise exc
 
     @override
     def query(self, command: str, delay: float | None = None) -> str:
         if command == '':
             return ''
-        with self._context:
-            self._adapter.write(command)
-            if delay is not None:
-                time.sleep(delay)
-            return self._adapter.read()
-        self._adapter.write(command)
-        if delay is not None:
-            time.sleep(delay)
-        return self._adapter.read()
+        for i in range(self._retries):
+            try:
+                with self._context:
+                    self._adapter.write(command)
+                    if delay is not None:
+                        time.sleep(delay)
+                    return self._adapter.read()
+                self._adapter.write(command)
+                if delay is not None:
+                    time.sleep(delay)
+                return self._adapter.read()
+            except BaseException as exc:
+                if self._resolver is not None:
+                    # should retry?
+                    if self._resolver(exc, i):
+                        continue
+                raise exc
+        return ''
 
     def close(self) -> None:
         with self._context:

@@ -75,6 +75,10 @@ class Instrument(MessageBase):
             self._adapter.apply(options)
 
     @property
+    def adapter(self) -> Adapter:
+        return self._adapter
+
+    @property
     def resolver(self) -> Callable[[BaseException, int], bool] | None:
         return self._resolver
 

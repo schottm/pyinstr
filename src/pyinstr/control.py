@@ -87,10 +87,16 @@ def basic_control[S: MessageProtocol, T](
     def _getter(self: S) -> T:
         if get_cmd is None:
             raise ValueError('Cannot get value without command!')
-        result = self.query(get_cmd)
+        response = self.query(get_cmd)
+        result = response
         if pre_format is not None:
             result = pre_format(self, result)
-        return get_format(result)
+        try:
+            return get_format(result)
+        except BaseException as exc:
+            if exc.args:
+                exc.args = (exc.args[0] + f' | Format of "{response}" failed for query "{get_cmd}".', *exc.args[1:])
+            raise
 
     def _setter(self: S, value: T) -> None:
         if set_cmd is None:

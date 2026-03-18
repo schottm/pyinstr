@@ -136,7 +136,8 @@ class Instrument(MessageBase):
 
     def close(self) -> None:
         with self._context:
-            del self._adapter  # this will throw errors if the communication is used after closing the instrument.
+            if hasattr(self, '_adapter'):
+                del self._adapter
 
 
 class ChannelDict[B: MessageProtocol, I, T: Channel[MessageProtocol]](defaultdict[I, T]):

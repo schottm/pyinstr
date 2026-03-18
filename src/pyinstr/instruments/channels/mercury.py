@@ -124,6 +124,28 @@ class TemperatureLoopControl(TemperatureSensor):
         response=ignore,
     )
 
+    flow_pid_enabled = bool_control(
+        BoolFormat.OnOff,  # TODO : check if needs changing to (Manual:Auto)
+        """Control whether the control-loop flow controller is controlled by
+        the PID loop (``True``) or the manual flow percentage (``False``).""",
+        'READ:DEV:{ch}:TEMP:LOOP:FAUT',
+        'SET:DEV:{ch}:TEMP:LOOP:FAUT:%s',
+        pre_format=_pre_format,
+        response=ignore,
+    )
+
+    flow = basic_control(
+        float,
+        """Set the gas flow manually.""",
+        'READ:DEV:{ch}:TEMP:LOOP:FSET',
+        'SET:DEV:{ch}:TEMP:LOOP:FSET:%g',
+        get_format=lambda v: float(v) * 1e-2,
+        set_format=lambda v: v * 1e2,
+        pre_format=_pre_format_quantity('%'),
+        validate=in_range_inc(0.0, 1.0),
+        response=ignore,
+    )
+
 
 class HeaterControl(Channel[MessageProtocol]):
     voltage = basic_control(
@@ -257,8 +279,8 @@ class MagnetControl(Channel[MessageProtocol]):
     action = enum_control(
         Action,
         """Get/set the PSU action status.""",
-        'READ:DEV:{ch}:PSU:SIG:ACTN',
-        'SET:DEV:{ch}:PSU:SIG:ACTN:%s',
+        'READ:DEV:{ch}:PSU:ACTN',
+        'SET:DEV:{ch}:PSU:ACTN:%s',
         pre_format=_pre_format,
         response=ignore,
     )

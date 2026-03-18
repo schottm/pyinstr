@@ -161,7 +161,7 @@ class BoolFormat(Enum):
     DefaultShort = ('t', 'f')
     YesNo = ('yes', 'no')
     YesNoShort = ('y', 'n')
-    OnOff = ('on', 'off')
+    OnOff = ('ON', 'OFF')
     OneZero = ('1', '0')
 
     def to_bool(self, value: str) -> bool:
